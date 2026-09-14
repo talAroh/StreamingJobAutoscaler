@@ -400,3 +400,15 @@ Notes:
   DESIGN.md — but check section 6 first; most questions are answered there.
 
 Good luck — we hope you have fun with it!
+
+## 12. Running this solution
+
+```bash
+docker compose up -d --build        # LocalStack + the autoscaler (waits for the seed)
+python seed/seed.py                 # load data; processing starts automatically
+docker compose logs -f autoscaler   # ends with "ALL CLUSTERS PROCESSED"
+```
+
+`GET http://localhost:8000/health`, `/rules` and `/clusters` show the service state.
+Tune throughput with `NUM_OF_WORKERS=4 SQS_MAX_MESSAGES=10 docker compose up -d --build`.
+Tests: `pip install -r requirements-dev.txt && pytest`.

@@ -12,15 +12,39 @@ services:
       timeout: 3s
       retries: 20
 
-  # Add your service here, e.g.:
-  #
-  # autoscaler:
-  #   build: ./service
-  #   environment:
-  #     - AWS_ENDPOINT_URL=http://localstack:4566
-  #     - AWS_ACCESS_KEY_ID=test
-  #     - AWS_SECRET_ACCESS_KEY=test
-  #     - AWS_DEFAULT_REGION=us-east-1
-  #   depends_on:
-  #     localstack:
-  #       condition: service_healthy
+  autoscaler:
+    build:
+      context: .
+      dockerfile: autoscaler_service/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+      - S3_BUCKET=spark-driver-logs
+      - SQS_QUEUE_NAME=driver-log-files
+      - DYNAMODB_TABLE=scaling_decisions
+      - RULES_KEY=config/rules.yaml
+      - MANIFEST_KEY=clusters.json
+      - NUM_OF_WORKERS=${NUM_OF_WORKERS:-1}         # consumer threads
+      - SQS_MAX_MESSAGES=${SQS_MAX_MESSAGES:-1}     # messages per receive (1-10)
+      - SQS_WAIT_TIME_SECONDS=${SQS_WAIT_TIME_SECONDS:-20}
+      - DYNAMODB_BATCH_SIZE=${DYNAMODB_BATCH_SIZE:-25}   # decisions per batch_write_item (1-25)
+      - LOG_LEVEL=INFO
+      - DEBUG_MODE=${DEBUG_MODE:-false}   # DEBUG_MODE=true docker compose up -d
+      - DEBUG_LOG_DIR=/app/logs
+    volumes:
+      - ./logs:/app/logs                  # debug trace files land in ./logs on the host
+    healthcheck:
+      # python:3.10-slim has no curl; /health returns 200 while starting and when done,
+      # 503 only if the rules/manifest in S3 are invalid.
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health', timeout=3).status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      localstack:
+        condition: service_healthy
