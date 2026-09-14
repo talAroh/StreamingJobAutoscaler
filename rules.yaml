@@ -1,0 +1,32 @@
+# Scaling rules, evaluated top to bottom: at each evaluation point the FIRST rule whose
+# condition holds is the matched rule (see README section 6).
+rules:
+  - name: scale_up_backlog_surge
+    metric: source.numBytesOutstanding
+    aggregation: last
+    operator: gt
+    threshold: 5000000000        # 5 GB of unread input backlog
+    window_minutes: 10
+    min_batches: 3
+    target_workers: 16
+    cooldown_minutes: 20
+
+  - name: scale_up_slow_batches
+    metric: batchDuration
+    aggregation: avg
+    operator: gt
+    threshold: 300000            # 5 minutes per batch, in ms
+    window_minutes: 15
+    min_batches: 3
+    target_workers: 8
+    cooldown_minutes: 20
+
+  - name: scale_down_idle
+    metric: numInputRows
+    aggregation: max
+    operator: lt
+    threshold: 1000
+    window_minutes: 30
+    min_batches: 5
+    target_workers: 2
+    cooldown_minutes: 60

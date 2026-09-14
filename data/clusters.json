@@ -1,0 +1,29 @@
+{
+  "clusters": [
+    {
+      "cluster_id": "cluster-aurora",
+      "initial_workers": 4,
+      "num_log_files": 5
+    },
+    {
+      "cluster_id": "cluster-borealis",
+      "initial_workers": 4,
+      "num_log_files": 5
+    },
+    {
+      "cluster_id": "cluster-cascade",
+      "initial_workers": 2,
+      "num_log_files": 3
+    },
+    {
+      "cluster_id": "cluster-drift",
+      "initial_workers": 6,
+      "num_log_files": 4
+    },
+    {
+      "cluster_id": "cluster-ember",
+      "initial_workers": 8,
+      "num_log_files": 4
+    }
+  ]
+}
