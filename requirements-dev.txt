@@ -1,0 +1,4 @@
+-r requirements.txt
+pytest>=8.0
+moto[s3,sqs,dynamodb]>=5.0
+httpx2>=2.0          # FastAPI TestClient transport (starlette >= 1.x deprecates plain httpx here)

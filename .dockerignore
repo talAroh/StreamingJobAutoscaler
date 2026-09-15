@@ -1,0 +1,12 @@
+.git
+.venv
+data
+seed
+**/__pycache__
+**/.pytest_cache
+*.md
+notes.txt
+# Not needed at runtime
+autoscaler_service/tests
+requirements-dev.txt
+pytest.ini

@@ -400,3 +400,26 @@ Notes:
   DESIGN.md — but check section 6 first; most questions are answered there.
 
 Good luck — we hope you have fun with it!
+
+## 12. Running the service
+
+```bash
+# edit autoscaler_service/config.py to change service configuration
+python3 -m venv .venv                # Create venv
+source .venv/bin/activate            # Start .venv
+pip3 install -r requirements-dev.txt # Install dev requirements for testing
+docker compose up -d --build         # LocalStack + the autoscaler (waits for the seed)
+python seed/seed.py                  # load data; processing starts automatically
+docker compose logs -f autoscaler    # ends with "ALL CLUSTERS PROCESSED"
+docker compose down                  # Stop and remove the services
+```
+
+### Other useful commands and API
+- **System health and config**: `GET http://localhost:8000/health`, `/rules` and `/clusters` show the service state.
+- **Tune throughput** with `NUM_OF_WORKERS=4 SQS_MAX_MESSAGES=10 docker compose up -d --build`.
+- **Tests**: `pip install -r requirements-dev.txt && pytest`.
+- **Read formatted dicions**: `python -c "import boto3; d=boto3.client('dynamodb',endpoint_url='http://localhost:4566',region_name='us-east-1',aws_access_key_id='test',aws_secret_access_key='test'); [print(i['cluster_id']['S'], i['decision_ts']['S'], i['rule_name']['S'], i['from_workers']['N'], '->', i['to_workers']['N']) for i in sorted(d.scan(TableName='scaling_decisions')['Items'], key=lambda i:(i['cluster_id']['S'], i['decision_ts']['S']))]"`
+- **For the rest of the list** Please install AWS CLI client
+- **List documents in DynamoDB**: `aws dynamodb scan --table-name scaling_decisions --endpoint-url http://localhost:4566`
+- **Check number of messages in SQS**: `aws sqs get-queue-attributes --queue-url http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/driver-log-files --attribute-names All --endpoint-url http://localhost:4566`
+- **Check S3 files**: `aws s3 ls s3://spark-driver-logs --recursive --endpoint-url http://localhost:4566`
